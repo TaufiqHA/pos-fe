@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+  }
+  
+  /* Hide sidebar and topbar when printing */
+  .md\\:flex.h-16, .md\\:w-64 {
+    display: none !important;
+  }
+  
+  /* Reset padding and backgrounds */
+  main {
+    padding: 0 !important;
+    background: white !important;
+  }
+  
+  .min-h-screen {
+    min-height: auto !important;
+  }
+}
+
