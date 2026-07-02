@@ -26,6 +26,7 @@ export default function HutangPiutang() {
   const unpaidSales = visibleSales.filter(s => s.status !== 'Lunas' && !isCancelledStatus(s.status));
   const unpaidPurchases = visiblePurchases.filter(p => {
     if (p.status === 'Lunas' || isCancelledStatus(p.status)) return false;
+    if (user?.role === 'Cabang' && p.deliveryStatus !== 'Selesai') return false;
     return true;
   });
 

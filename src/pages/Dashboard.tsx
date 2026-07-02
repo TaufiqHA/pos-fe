@@ -72,6 +72,10 @@ export default function Dashboard() {
     return false;
   }).length;
 
+  const pendingDeliveryCount = purchases.filter(p => 
+    user?.role === 'Cabang' && p.branchId === user?.branchId && p.deliveryStatus === 'Dikirim'
+  ).length;
+
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedCategoryAnalytics, setSelectedCategoryAnalytics] = useState<string | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
@@ -188,7 +192,8 @@ export default function Dashboard() {
   const currentMonthHutang = visiblePurchases
     .filter(p => {
       const d = new Date(p.date);
-      return isUnpaidDebtStatus(p.status) && d.getMonth() === currentMonthIdx && d.getFullYear() === currentYear;
+      const isReceived = user?.role === 'Cabang' ? p.deliveryStatus === 'Selesai' : true;
+      return isUnpaidDebtStatus(p.status) && isReceived && d.getMonth() === currentMonthIdx && d.getFullYear() === currentYear;
     })
     .reduce((acc, p) => acc + (p.total - (p.cashGiven || 0)), 0);
 
@@ -552,6 +557,11 @@ export default function Dashboard() {
                 className="relative bg-transparent border-2 border-sky-400 text-sky-400 hover:bg-sky-400/10 font-extrabold text-sm py-4 px-6 rounded-2xl w-full tracking-widest text-center cursor-pointer transition-all uppercase shadow-xl flex items-center justify-center gap-2 active:scale-95"
               >
                 STATUS PENGIRIMAN
+                {pendingDeliveryCount > 0 && (
+                  <span className="absolute top-2 right-2 sm:top-1 sm:right-1 bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full border border-[#070b19]">
+                    {pendingDeliveryCount}
+                  </span>
+                )}
               </button>
               <button 
                 onClick={() => navigate('/pembelian/buat')}
@@ -686,6 +696,11 @@ export default function Dashboard() {
                   className="relative inline-flex items-center px-4 py-2.5 border-2 border-sky-400 text-xs font-extrabold rounded-2xl shadow-lg text-sky-400 hover:bg-sky-400/10 transition-colors active:scale-95 uppercase tracking-wider cursor-pointer"
                 >
                   Status Pengiriman
+                  {pendingDeliveryCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-[#070b19] shadow-lg">
+                      {pendingDeliveryCount}
+                    </span>
+                  )}
                 </button>
                 <button 
                   onClick={() => navigate('/pembelian/buat')}

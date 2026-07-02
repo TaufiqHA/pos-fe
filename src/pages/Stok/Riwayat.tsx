@@ -10,7 +10,7 @@ const extractInvoice = (reason: string): string | null => {
 };
 
 export default function StokRiwayat() {
-  const { user, stockHistory, purchases, openInvoiceModal } = usePosStore();
+  const { user, stockHistory, purchases, openInvoiceModal, products } = usePosStore();
 
   let visibleHistory = stockHistory;
 
@@ -32,6 +32,34 @@ export default function StokRiwayat() {
     const dateA = a.date || '';
     const dateB = b.date || '';
     return new Date(dateB).getTime() - new Date(dateA).getTime();
+  });
+
+  // Siapkan data stok riil saat ini sebagai titik awal
+  const currentStocks = new Map<string, number>();
+  products.forEach(p => {
+    // Sesuaikan patokan stok berdasarkan role user
+    const stock = user?.role === 'Cabang' ? p.stock : (p.centralStock ?? p.stock);
+    currentStocks.set(p.id, stock);
+  });
+
+  // Timpa nilai prevStock dan newStock dengan hasil kalkulasi mundur
+  const synchronizedHistory = sortedHistory.map(log => {
+    const current = currentStocks.get(log.productId) || 0;
+    const computedNewStock = current;
+    
+    // Membalik operasi (reverse operation) untuk mendapat stok sebelumnya
+    const computedPrevStock = log.type === 'Tambah' 
+      ? computedNewStock - log.qty 
+      : computedNewStock + log.qty;
+    
+    // Perbarui Map agar log yang lebih lama menggunakan hasil stok sebelum ini
+    currentStocks.set(log.productId, computedPrevStock);
+
+    return {
+      ...log,
+      newStock: computedNewStock,
+      prevStock: computedPrevStock
+    };
   });
 
   return (
@@ -60,14 +88,14 @@ export default function StokRiwayat() {
               </tr>
             </thead>
             <tbody className="bg-transparent divide-y divide-[#1d2a57]/30 text-slate-200">
-              {sortedHistory.length === 0 ? (
+              {synchronizedHistory.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="px-6 py-10 text-center text-sm text-slate-500 font-semibold uppercase tracking-wider">
                     Belum ada riwayat stok.
                   </td>
                 </tr>
               ) : (
-                sortedHistory.map((log) => {
+                synchronizedHistory.map((log) => {
                   const invoice = extractInvoice(log.reason);
                   return (
                     <tr key={log.id} className="hover:bg-[#182352]/30 transition-colors">
