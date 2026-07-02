@@ -145,10 +145,31 @@ export const usePosStore = create<PosState>()(
 
           const syncedPurchases = rawPurchases.map((p: any) => {
             const linkedS = rawSales.find((s: any) => s.paymentRef === p.id);
-            if (linkedS && linkedS.status === 'Lunas' && p.status !== 'Lunas') {
-              api.put(`/purchases/${p.id}`, { status: 'Lunas', cashGiven: p.total }).catch(() => {});
-              return { ...p, status: 'Lunas', cashGiven: p.total };
+            
+            if (linkedS) {
+              let updates: any = {};
+              let needsUpdate = false;
+
+              // 1. Sinkronisasi status Lunas
+              if (linkedS.status === 'Lunas' && p.status !== 'Lunas') {
+                updates.status = 'Lunas';
+                updates.cashGiven = p.total;
+                needsUpdate = true;
+              }
+
+              // 2. Sinkronisasi metode pembayaran
+              if (p.method !== linkedS.method) {
+                updates.method = linkedS.method;
+                needsUpdate = true;
+              }
+
+              // 3. Update ke backend dan state lokal jika ada perubahan
+              if (needsUpdate) {
+                api.put(`/purchases/${p.id}`, updates).catch(() => {});
+                return { ...p, ...updates };
+              }
             }
+            
             return p;
           });
 
