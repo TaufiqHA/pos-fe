@@ -179,7 +179,7 @@ export default function Dashboard() {
 
   const isUnpaidDebtStatus = (st?: string) => {
     const s = (st || '').toLowerCase();
-    return s !== 'lunas' && !isCancelledStatus(st);
+    return s !== 'lunas' && s !== 'selesai' && !isCancelledStatus(st);
   };
 
   const currentMonthSales = visibleSales

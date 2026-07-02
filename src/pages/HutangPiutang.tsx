@@ -23,9 +23,9 @@ export default function HutangPiutang() {
     return s === 'dibatalkan' || s === 'batal' || s === 'ditolak';
   };
 
-  const unpaidSales = visibleSales.filter(s => s.status !== 'Lunas' && !isCancelledStatus(s.status));
+  const unpaidSales = visibleSales.filter(s => s.status !== 'Lunas' && s.status !== 'Selesai' && !isCancelledStatus(s.status));
   const unpaidPurchases = visiblePurchases.filter(p => {
-    if (p.status === 'Lunas' || isCancelledStatus(p.status)) return false;
+    if (p.status === 'Lunas' || p.status === 'Selesai' || isCancelledStatus(p.status)) return false;
     if (user?.role === 'Cabang' && p.deliveryStatus !== 'Selesai') return false;
     return true;
   });
