@@ -8,10 +8,11 @@ import { CurrencyInput } from '../../components/CurrencyInput';
 
 export default function PenjualanCreate() {
   const navigate = useNavigate();
-  const { user, users, products, branches, purchases, addSale, addPurchase, addDelivery } = usePosStore();
+  const { user, users, products, branches, sales, purchases, addSale, addPurchase, addDelivery } = usePosStore();
 
   const isCustOrStore = user?.role === 'Cust' || user?.role === 'Outlet';
   const isAdminPusat = user?.role === 'Admin';
+  const isCabangOrOutletOrCust = user?.role === 'Cabang' || user?.role === 'Outlet' || user?.role === 'Cust';
   const [customer, setCustomer] = useState(isCustOrStore ? (user?.branchId ? branches?.find(b => b.id === user.branchId)?.name || 'Cabang' : 'Cabang') : '');
   const [selectedWilayah, setSelectedWilayah] = useState('');
 
@@ -37,6 +38,30 @@ export default function PenjualanCreate() {
     return (product.branchPrices && user?.branchId && product.branchPrices[user.branchId]) 
       ? product.branchPrices[user.branchId] 
       : product.sellPrice;
+  };
+
+  const getBranchStock = (productId: string) => {
+    if (!isCabangOrOutletOrCust || !user?.branchId) return 0;
+
+    let stockIn = 0;
+    purchases.forEach(p => {
+      if (p.branchId === user.branchId && (p.status === 'Selesai' || p.isProcessed)) {
+        p.items.forEach(item => {
+          if (item.productId === productId) stockIn += item.qty;
+        });
+      }
+    });
+
+    let stockOut = 0;
+    sales.forEach(s => {
+      if (s.branchId === user.branchId || (!s.branchId && s.userId === user?.id)) {
+        s.items.forEach(item => {
+          if (item.productId === productId) stockOut += item.qty;
+        });
+      }
+    });
+
+    return stockIn - stockOut;
   };
 
   const uniqueWilayah = useMemo(() => {
@@ -69,7 +94,17 @@ export default function PenjualanCreate() {
     availableProducts = products.filter(p => branchPurchaseProductIds.has(p.id));
   }
 
-  const validProducts = availableProducts.filter(p => p.stock > 0);
+  const validProducts = availableProducts.map(p => {
+    if (isCabangOrOutletOrCust) {
+      return { ...p, branchStock: getBranchStock(p.id) };
+    }
+    return p;
+  }).filter(p => {
+    if (isCabangOrOutletOrCust) {
+      return (p as any).branchStock > 0;
+    }
+    return p.stock > 0;
+  });
   const searchResults = searchProduct.length > 0 
     ? validProducts.filter(p => p.name.toLowerCase().includes(searchProduct.toLowerCase()) || p.sku.toLowerCase().includes(searchProduct.toLowerCase())).slice(0, 5)
     : [];
@@ -78,7 +113,8 @@ export default function PenjualanCreate() {
     setCart(prev => {
       const exists = prev.find(item => item.productId === product.id);
       if (exists) {
-        if (exists.qty + 1 > product.stock) {
+        const currentStock = isCabangOrOutletOrCust ? getBranchStock(product.id) : product.stock;
+        if (exists.qty + 1 > currentStock) {
            alert('Stok tidak mencukupi!');
            return prev;
         }
@@ -105,8 +141,9 @@ export default function PenjualanCreate() {
     const product = products.find(p => p.id === productId);
     if (!product || newQty < 1) return;
     
-    if (newQty > product.stock) {
-      alert(`Stok hanya tersedia ${product.stock} ${product.unit}`);
+    const currentStock = isCabangOrOutletOrCust ? getBranchStock(product.id) : product.stock;
+    if (newQty > currentStock) {
+      alert(`Stok hanya tersedia ${currentStock} ${product.unit}`);
       return;
     }
 
@@ -144,8 +181,9 @@ export default function PenjualanCreate() {
         }
       }
 
-      if (newQty > product.stock) {
-        alert(`Stok hanya tersedia ${product.stock} ${product.unit}. Tidak dapat menerapkan opsi grosir ini.`);
+      const currentStock = isCabangOrOutletOrCust ? getBranchStock(product.id) : product.stock;
+      if (newQty > currentStock) {
+        alert(`Stok hanya tersedia ${currentStock} ${product.unit}. Tidak dapat menerapkan opsi grosir ini.`);
         return prev;
       }
 
@@ -359,7 +397,7 @@ export default function PenjualanCreate() {
                            )}
                            <div>
                               <span className="block font-bold truncate uppercase">{product.name}</span>
-                              <span className="block text-[11px] text-slate-400 font-mono tracking-wider truncate">{product.sku} | Stok: <span className="text-[#b4f56b]">{product.stock} {product.unit}</span></span>
+                              <span className="block text-[11px] text-slate-400 font-mono tracking-wider truncate">{product.sku} | Stok: <span className="text-[#b4f56b]">{isCabangOrOutletOrCust ? (product as any).branchStock : product.stock} {product.unit}</span></span>
                               {product.isWholesale && product.wholesalePrices && product.wholesalePrices.length > 0 && (
                                 <span className="inline-block mt-1 px-1.5 py-0.5 bg-[#b4f56b]/20 text-[#b4f56b] text-[9px] font-extrabold tracking-widest rounded-md uppercase">Tersedia Harga Grosir</span>
                               )}
