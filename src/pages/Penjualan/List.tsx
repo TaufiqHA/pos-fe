@@ -54,7 +54,7 @@ export default function PenjualanList() {
         customer: p.supplier, // Supplier di sini adalah nama cabang
         grandTotal: p.total,
         method: p.method,
-        status: p.status === 'Belum Bayar' ? 'Diajukan' : (p.status || (p.method === 'Kredit' ? 'Belum Bayar' : 'Lunas')),
+        status: p.status === 'Belum Bayar' ? 'Diajukan' : (p.status || (p.method === 'Transfer' ? 'Selesai' : 'Belum Bayar')),
       }));
       
     visibleSales = [...userSales, ...userPendingPOs] as any[];
@@ -185,7 +185,7 @@ export default function PenjualanList() {
                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-slate-400">{sale.method}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(sale.status)}`}>
-                          {sale.status || (sale.method === 'Kredit' ? 'Belum Bayar' : 'Lunas')}
+                          {sale.status || (sale.method === 'Transfer' ? 'Selesai' : 'Belum Bayar')}
                        </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">

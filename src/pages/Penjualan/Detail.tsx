@@ -119,7 +119,7 @@ export default function PenjualanDetail() {
           </div>
           <div className="text-right">
              <span className={`px-4 py-1.5 inline-flex text-xs leading-5 font-bold uppercase tracking-widest rounded-full ${getStatusClass(sale.status)} border border-current/30`}>
-                {sale.status || (sale.method === 'Kredit' ? 'Belum Bayar' : 'Lunas')}
+                {sale.status || (sale.method === 'Transfer' ? 'Selesai' : 'Belum Bayar')}
              </span>
           </div>
         </div>

@@ -79,7 +79,7 @@ export type Sale = {
   discount: number;
   grandTotal: number;
   method: 'Tunai' | 'Transfer' | 'Kredit';
-  status: 'Lunas' | 'Belum Bayar' | 'Sebagian';
+  status: 'Lunas' | 'Belum Bayar' | 'Sebagian' | 'Selesai';
   items: SaleItem[];
   paymentRef?: string;
   notes?: string;

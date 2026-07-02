@@ -179,13 +179,11 @@ export default function PermintaanPO() {
       return;
     }
 
-    let status: 'Lunas' | 'Belum Bayar' | 'Sebagian' = 'Belum Bayar';
-    if (method === 'Tunai') {
-      if (cashGiven < grandTotal) {
-        alert('Jumlah bayar kurang dari total tagihan!');
-        return;
-      }
-      status = 'Lunas';
+    let status: 'Lunas' | 'Belum Bayar' | 'Sebagian' | 'Selesai' = 'Belum Bayar';
+    if (method === 'Transfer') {
+      status = 'Selesai';
+    } else if (method === 'Tunai') {
+      status = 'Belum Bayar';
     }
 
     setIsSubmitting(true);

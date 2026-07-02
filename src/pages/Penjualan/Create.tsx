@@ -171,12 +171,14 @@ export default function PenjualanCreate() {
       return;
     }
 
-    let status: 'Lunas' | 'Belum Bayar' | 'Sebagian' = 'Lunas';
-    if (method === 'Tunai' && cashGiven < grandTotal) {
-      alert('Jumlah bayar kurang dari total tagihan!');
-      return;
+    let status: 'Lunas' | 'Belum Bayar' | 'Sebagian' | 'Selesai' = 'Belum Bayar';
+    if (method === 'Transfer') {
+      status = 'Selesai';
+    } else if (method === 'Tunai') {
+      status = 'Belum Bayar';
+    } else if (method === 'Kredit') {
+      status = 'Belum Bayar';
     }
-    if (method === 'Kredit') status = 'Belum Bayar';
 
     try {
       if (isCustOrStore) {
