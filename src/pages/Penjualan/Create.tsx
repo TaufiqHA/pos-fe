@@ -43,9 +43,18 @@ export default function PenjualanCreate() {
   const getBranchStock = (productId: string) => {
     if (!isCabangOrOutletOrCust || !user?.branchId) return 0;
 
+    // Dapatkan nama cabang saat ini untuk membedakan PO masuk dari pusat vs PO masuk dari outlet
+    const currentBranchName = branches.find(b => b.id === user.branchId)?.name || 'Cabang';
+
     let stockIn = 0;
     purchases.forEach(p => {
-      if (p.branchId === user.branchId && (p.status === 'Selesai' || p.isProcessed)) {
+      // PERBAIKAN: Pastikan ini benar-benar barang masuk ke cabang (supplier BUKAN cabang itu sendiri)
+      // PO dari Outlet akan memiliki p.supplier === currentBranchName, sehingga tidak akan dihitung sebagai stockIn
+      if (
+        p.branchId === user.branchId && 
+        (p.status === 'Selesai' || p.isProcessed) &&
+        p.supplier !== currentBranchName
+      ) {
         p.items.forEach(item => {
           if (item.productId === productId) stockIn += item.qty;
         });
