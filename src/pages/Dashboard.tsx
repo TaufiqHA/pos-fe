@@ -118,10 +118,21 @@ export default function Dashboard() {
     if (!selectedPoForValidation) return;
     setIsValidationSubmitting(true);
     try {
+      // 1. Update status PO menjadi selesai
       await updatePurchase(selectedPoForValidation.id, { 
         deliveryStatus: 'Selesai', 
         status: 'Selesai' 
       });
+      
+      // 2. Tambahkan stok barang dan riwayat berdasarkan item di PO
+      for (const item of selectedPoForValidation.items) {
+        await adjustStock(
+          item.productId, 
+          'Tambah', 
+          item.qty, 
+          `Penerimaan PO Pusat (${selectedPoForValidation.invoice})`
+        );
+      }
       
       setSuccessToast('Penerimaan barang berhasil divalidasi!');
       setTimeout(() => setSuccessToast(null), 3000);
