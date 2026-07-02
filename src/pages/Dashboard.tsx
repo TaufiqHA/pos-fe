@@ -73,7 +73,10 @@ export default function Dashboard() {
   }).length;
 
   const pendingDeliveryCount = purchases.filter(p => 
-    user?.role === 'Cabang' && p.branchId === user?.branchId && p.deliveryStatus === 'Dikirim'
+    user?.role === 'Cabang' && 
+    p.branchId === user?.branchId && 
+    p.deliveryStatus === 'Dikirim' && 
+    (p.userId === user?.id || users.find(u => u.id === p.userId)?.role === 'Admin')
   ).length;
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -1335,7 +1338,7 @@ export default function Dashboard() {
             
             {/* Modal Content */}
             <div className="p-6 overflow-y-auto custom-scrollbar">
-              {purchases.filter(p => p.branchId === user.branchId && (poModalTab === 'request' ? p.userId === user.id : p.userId !== user.id)).length === 0 ? (
+              {purchases.filter(p => p.branchId === user.branchId && (poModalTab === 'request' ? p.userId === user.id : (p.userId !== user.id && users.find(u => u.id === p.userId)?.role === 'Admin'))).length === 0 ? (
                 <div className="py-12 text-center text-slate-400 flex flex-col items-center gap-3">
                   <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-2">
                     <Package size={32} className="text-slate-500" />
@@ -1357,7 +1360,7 @@ export default function Dashboard() {
                     </thead>
                     <tbody className="divide-y divide-[#1d2a57]">
                       {purchases
-                        .filter(p => p.branchId === user.branchId && (poModalTab === 'request' ? p.userId === user.id : p.userId !== user.id))
+                        .filter(p => p.branchId === user.branchId && (poModalTab === 'request' ? p.userId === user.id : (p.userId !== user.id && users.find(u => u.id === p.userId)?.role === 'Admin')))
                         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                         .map((po) => (
                         <tr key={po.id} className="hover:bg-slate-800/20 transition-colors">
