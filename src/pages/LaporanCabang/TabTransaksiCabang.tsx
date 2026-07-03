@@ -76,14 +76,13 @@ export default function TabTransaksiCabang() {
                  <tr>
                    <th className="px-5 py-4 text-left text-[11px] font-black tracking-widest text-[#b4f56b] uppercase">Invoice</th>
                    <th className="px-5 py-4 text-left text-[11px] font-black tracking-widest text-[#b4f56b] uppercase">Tanggal</th>
-                   <th className="px-5 py-4 text-left text-[11px] font-black tracking-widest text-[#b4f56b] uppercase">Cabang</th>
                    <th className="px-5 py-4 text-left text-[11px] font-black tracking-widest text-[#b4f56b] uppercase">Outlet</th>
                    <th className="px-5 py-4 text-right text-[11px] font-black tracking-widest text-[#b4f56b] uppercase">Total Harga</th>
                  </tr>
                </thead>
                <tbody className="bg-[#0b1330] divide-y divide-[#1d2a57]/30">
                  {branchSales.length === 0 ? (
-                   <tr><td colSpan={5} className="px-5 py-10 text-center text-slate-500 font-bold text-xs uppercase tracking-wider">Tidak ada data penjualan.</td></tr>
+                   <tr><td colSpan={4} className="px-5 py-10 text-center text-slate-500 font-bold text-xs uppercase tracking-wider">Tidak ada data penjualan.</td></tr>
                  ) : (
                    branchSales.map(s => (
                      <tr key={s.id} className="hover:bg-[#131d42]/60 transition-colors">
@@ -98,7 +97,6 @@ export default function TabTransaksiCabang() {
                          </button>
                        </td>
                        <td className="px-5 py-4 text-sm text-slate-400 font-mono font-medium">{formatDate(s.date)}</td>
-                       <td className="px-5 py-4 text-sm text-slate-300 font-semibold uppercase">{branches.find(b => b.id === s.branchId)?.name || '-'}</td>
                        <td className="px-5 py-4 text-sm text-slate-300 font-semibold">{s.customer}</td>
                        <td className="px-5 py-4 text-sm text-[#b4f56b] font-black text-right font-mono">{formatRupiah(s.grandTotal)}</td>
                      </tr>
