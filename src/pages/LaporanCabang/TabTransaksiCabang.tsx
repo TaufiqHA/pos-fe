@@ -4,13 +4,12 @@ import { formatRupiah, formatDate } from '../../lib/utils';
 // Lucide react icons removed
 
 export default function TabTransaksiCabang() {
-  const { branches, sales, products, wilayahs, openInvoiceModal } = usePosStore();
+  const { branches, sales, products, wilayahs, openInvoiceModal, categories } = usePosStore();
   const [filterWilayah, setFilterWilayah] = useState('Semua Wilayah');
   const [filterCabang, setFilterCabang] = useState('Semua Cabang');
   const [filterKategori, setFilterKategori] = useState('Semua Kategori');
   
   const uniqueRegions = wilayahs;
-  const uniqueKategori = Array.from(new Set(products.map(p => p.category).filter(cat => cat && cat !== 'Umum'))) as string[];
 
   const branchSales = sales.filter(s => {
     let matchRegion = filterWilayah === 'Semua Wilayah';
@@ -65,7 +64,7 @@ export default function TabTransaksiCabang() {
             className="bg-[#182352] text-white border border-[#1d2a57] rounded-xl px-4 py-2 w-full sm:w-1/3 focus:outline-none focus:ring-1 focus:ring-[#b4f56b] text-sm font-semibold cursor-pointer"
           >
             <option value="Semua Kategori">Semua Kategori</option>
-            {uniqueKategori.map(c => <option key={c} value={c}>{c}</option>)}
+            {categories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
       </div>

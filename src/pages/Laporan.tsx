@@ -37,10 +37,20 @@ export default function Laporan() {
     return acc + s.items.reduce((sum, item) => sum + item.qty, 0);
   }, 0);
 
-  // Profit calculation (using item.cogs if available, fallback to current buyPrice)
+  // Profit calculation (using item.cogs if available, fallback to role-based cogs)
   const totalProfit = filteredSales.reduce((acc, s) => {
     return acc + s.items.reduce((sum, item) => {
-      const cogs = item.cogs ?? products.find(p => p.id === item.productId)?.buyPrice ?? 0;
+      const product = products.find(p => p.id === item.productId);
+      
+      // Default COGS untuk Pusat adalah cogs dari database atau buyPrice (harga modal asli)
+      let cogs = item.cogs ?? product?.buyPrice ?? 0;
+      
+      // Untuk transaksi yang dilakukan oleh Cabang/Outlet, modal mereka adalah harga beli dari Pusat (sellPrice).
+      // Abaikan item.cogs karena item.cogs di backend menyimpan modal Pusat (buyPrice).
+      if (s.branchId || user?.role === 'Cabang' || user?.role === 'Outlet') {
+        cogs = product?.sellPrice ?? 0;
+      }
+      
       return sum + ((item.price - cogs) * item.qty);
     }, 0);
   }, 0);

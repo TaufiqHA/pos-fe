@@ -30,12 +30,19 @@ export default function PembelianList() {
   let visiblePurchases = purchases;
   if (user?.role === 'Cabang') {
     if (activeTab === 'po_ke_pusat') {
-      visiblePurchases = purchases.filter(p => p.branchId === user?.branchId);
+      visiblePurchases = purchases.filter(p => 
+        p.branchId === user?.branchId && 
+        (p.supplier || '').toLowerCase() === 'kantor pusat'
+      );
     } else {
-      visiblePurchases = purchases.filter(p => p.destinationAdminId === user?.id);
+      visiblePurchases = purchases.filter(p => 
+        p.destinationAdminId === user?.id || 
+        (p.branchId === user?.branchId && (p.supplier || '').toLowerCase() !== 'kantor pusat')
+      );
     }
   } else if (user?.role === 'Admin') {
-    visiblePurchases = purchases.filter(p => (p.supplier || '').toLowerCase() !== 'kantor pusat');
+    // Pusat hanya melihat pembelian yang dibuat oleh Pusat itu sendiri (tidak memiliki branchId)
+    visiblePurchases = purchases.filter(p => !p.branchId);
   }
 
   // Penyesuaian dinamis untuk data lama yang status utamanya tidak tersinkronisasi

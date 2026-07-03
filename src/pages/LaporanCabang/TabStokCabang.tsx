@@ -2,39 +2,51 @@ import React, { useState } from 'react';
 import { usePosStore } from '../../store';
 
 export default function TabStokCabang() {
-  const { products, branches, wilayahs } = usePosStore();
+  const { products, branches, wilayahs, categories, stockHistory } = usePosStore();
   const [filterWilayah, setFilterWilayah] = useState('Semua Wilayah');
   const [filterCabang, setFilterCabang] = useState('Semua Cabang');
   const [filterKategori, setFilterKategori] = useState('Semua Kategori');
-  const uniqueKategori = Array.from(new Set(products.map(p => p.category).filter(cat => cat && cat !== 'Umum'))) as string[];
 
   const uniqueRegions = wilayahs;
 
-  const filteredProducts = products.filter(p => {
-    // Hanya tampilkan stok yang benar-benar milik cabang
-    if (!(p as any).branchId) {
-      return false;
-    }
+  const filteredProducts = products.map(p => {
+    let branchStock = 0;
+    let hasHistory = false;
 
-    let matchRegion = true;
-    let matchBranch = true;
-    
-    if (filterWilayah !== 'Semua Wilayah') {
-      const branchInfo = branches.find(b => b.id === (p as any).branchId);
-      matchRegion = branchInfo ? branchInfo.wilayah === filterWilayah : false;
-    }
-    
-    if (filterCabang !== 'Semua Cabang') {
-      const branchInfo = branches.find(b => b.id === (p as any).branchId);
-      matchBranch = branchInfo ? branchInfo.name === filterCabang : false;
-    }
+    stockHistory.forEach(h => {
+      if (h.productId !== p.id) return;
+      if (!h.branchId) return;
+
+      const branchInfo = branches.find(b => b.id === h.branchId);
+      if (!branchInfo) return;
+
+      let matchRegion = true;
+      let matchBranch = true;
+
+      if (filterWilayah !== 'Semua Wilayah') {
+        matchRegion = branchInfo.wilayah === filterWilayah;
+      }
+      if (filterCabang !== 'Semua Cabang') {
+        matchBranch = branchInfo.name === filterCabang;
+      }
+
+      if (matchRegion && matchBranch) {
+        hasHistory = true;
+        if (h.type === 'Tambah') branchStock += h.qty;
+        if (h.type === 'Kurang') branchStock -= h.qty;
+      }
+    });
+
+    return { ...p, branchStock, hasHistory };
+  }).filter(p => {
+    if (!p.hasHistory) return false;
 
     let matchCategory = true;
     if (filterKategori !== 'Semua Kategori') {
       matchCategory = p.category === filterKategori;
     }
 
-    return matchRegion && matchBranch && matchCategory;
+    return matchCategory;
   });
 
   return (
@@ -66,7 +78,7 @@ export default function TabStokCabang() {
           className="bg-[#182352] text-white border border-[#1d2a57] rounded-xl px-4 py-2 w-full sm:w-1/3 focus:outline-none focus:ring-1 focus:ring-[#b4f56b] text-sm font-semibold cursor-pointer"
         >
           <option value="Semua Kategori">Semua Kategori</option>
-          {uniqueKategori.map(c => <option key={c} value={c}>{c}</option>)}
+          {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 
@@ -89,7 +101,7 @@ export default function TabStokCabang() {
                   <td className="px-4 py-4 text-sm text-white font-bold uppercase">{p.name}</td>
                   <td className="px-4 py-4 text-sm text-slate-400 font-mono font-medium">{p.sku}</td>
                   <td className="px-4 py-4 text-sm text-slate-400 font-medium">{p.category}</td>
-                  <td className="px-4 py-4 text-sm text-white font-black text-right font-mono">{p.stock} <span className="text-slate-500 text-xs">{p.unit}</span></td>
+                  <td className="px-4 py-4 text-sm text-white font-black text-right font-mono">{p.branchStock} <span className="text-slate-500 text-xs">{p.unit}</span></td>
                 </tr>
               ))
             )}

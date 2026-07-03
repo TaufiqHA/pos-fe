@@ -30,9 +30,7 @@ export default function PembelianCreate() {
 
   const getActiveBasePrice = (product: Product) => {
     if (user?.role === 'Cabang' || user?.role === 'Outlet') {
-      return (product.branchPrices && user?.branchId && product.branchPrices[user.branchId])
-        ? product.branchPrices[user.branchId]
-        : product.sellPrice;
+      return product.sellPrice;
     }
     return product.buyPrice;
   };

@@ -66,7 +66,12 @@ export default function StokMonitor() {
 
   const filteredProducts = availableProducts.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
-    const status = getStatus(p.stock, p.minStock).label;
+    
+    // Tambahkan penentuan currentStock
+    const currentStock = user?.role === 'Admin' ? (p.centralStock ?? p.stock) : p.stock;
+    
+    // Gunakan currentStock, bukan p.stock
+    const status = getStatus(currentStock, p.minStock).label;
     const matchesStatus = filterStatus === 'Semua' || status === filterStatus;
 
     return matchesSearch && matchesStatus;
@@ -87,6 +92,10 @@ export default function StokMonitor() {
       setIsModalOpen(false);
     }
   };
+
+  const selectedStock = selectedProduct
+    ? (user?.role === 'Admin' ? (selectedProduct.centralStock ?? selectedProduct.stock) : selectedProduct.stock)
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -143,7 +152,11 @@ export default function StokMonitor() {
                 </tr>
               ) : (
                 filteredProducts.map((product) => {
-                  const status = getStatus(product.stock, product.minStock);
+                  // Tentukan currentStock untuk setiap baris
+                  const currentStock = user?.role === 'Admin' ? (product.centralStock ?? product.stock) : product.stock;
+                  
+                  // Gunakan currentStock pada getStatus
+                  const status = getStatus(currentStock, product.minStock);
                   const isRed = status.label === 'Habis';
                   const isYellow = status.label === 'Menipis';
                   const badgeClass = isRed 
@@ -168,7 +181,7 @@ export default function StokMonitor() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300 font-mono font-medium">{product.sku}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 font-medium">{product.category}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-bold text-right font-mono">{product.stock} {product.unit}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-bold text-right font-mono">{currentStock} {product.unit}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 text-right font-mono">{product.minStock} {product.unit}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                          <span className={`px-2.5 py-0.5 inline-flex text-xs font-black rounded-full uppercase tracking-wider ${badgeClass}`}>
@@ -212,7 +225,7 @@ export default function StokMonitor() {
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold tracking-widest text-[#b4f56b] uppercase mb-1">Stok Saat Ini</label>
-                  <input type="text" readOnly value={`${selectedProduct.stock} ${selectedProduct.unit}`} className="bg-[#182352] text-[#b4f56b] border border-[#1d2a57] rounded-xl px-4 py-2.5 w-full text-sm font-mono font-bold cursor-not-allowed" />
+                  <input type="text" readOnly value={`${selectedStock} ${selectedProduct.unit}`} className="bg-[#182352] text-[#b4f56b] border border-[#1d2a57] rounded-xl px-4 py-2.5 w-full text-sm font-mono font-bold cursor-not-allowed" />
                 </div>
               </div>
               
@@ -246,12 +259,12 @@ export default function StokMonitor() {
                   type="number" 
                   required 
                   min="1" 
-                  max={adjustType === 'Kurang' ? selectedProduct.stock : undefined} 
+                  max={adjustType === 'Kurang' ? selectedStock : undefined} 
                   value={adjustQty} 
                   onChange={e => setAdjustQty(Number(e.target.value))} 
                   className="bg-[#182352] text-white border border-[#1d2a57] rounded-xl px-4 py-2.5 w-full focus:outline-none focus:ring-1 focus:ring-[#b4f56b] text-sm font-mono font-bold" 
                 />
-                {adjustType === 'Kurang' && adjustQty > selectedProduct.stock && (
+                {adjustType === 'Kurang' && adjustQty > selectedStock && (
                   <p className="mt-1.5 text-xs text-red-400 font-semibold uppercase tracking-wide">Jumlah kurang melebihi stok yang ada.</p>
                 )}
               </div>
@@ -278,7 +291,7 @@ export default function StokMonitor() {
                 </button>
                 <button 
                   type="submit" 
-                  disabled={adjustType === 'Kurang' && adjustQty > selectedProduct.stock} 
+                  disabled={adjustType === 'Kurang' && adjustQty > selectedStock} 
                   className="w-1/2 bg-[#b4f56b] hover:bg-[#a5e45a] text-black font-extrabold text-sm py-4 px-4 rounded-xl shadow-lg transition-transform focus:scale-95 uppercase tracking-wider cursor-pointer disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed flex flex-col items-center justify-center"
                 >
                   <span>Simpan</span>

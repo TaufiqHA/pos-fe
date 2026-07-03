@@ -4,7 +4,7 @@ import { formatDate } from '../lib/utils';
 import { Truck, CheckCircle, Clock, X } from 'lucide-react';
 
 export default function Pengiriman() {
-    const { user, deliveries, updateDelivery, purchases, updatePurchase, sales, updateSale, openInvoiceModal } = usePosStore();
+    const { user, users, branches, deliveries, updateDelivery, purchases, updatePurchase, sales, updateSale, openInvoiceModal } = usePosStore();
     
     const [filterStatus, setFilterStatus] = useState('Semua');
     const [search, setSearch] = useState('');
@@ -16,6 +16,20 @@ export default function Pengiriman() {
   let visibleDeliveries = deliveries;
   if (user?.role === 'Cabang') {
     visibleDeliveries = deliveries.filter(d => d.branchId === user?.branchId);
+  } else if (user?.role === 'Admin') {
+    // Admin Pusat HANYA melihat pengiriman ke Cabang (bukan Outlet)
+    visibleDeliveries = deliveries.filter(d => {
+      const customerName = (d.customerName || '').toLowerCase();
+      
+      // 1. Cek apakah customerName adalah nama salah satu Cabang (di tabel branches)
+      const isCabangBranch = branches.some(b => (b.name || '').toLowerCase() === customerName);
+      
+      // 2. Cek apakah customerName adalah User dengan role 'Cabang'
+      const targetUser = users.find(u => (u.name || '').toLowerCase() === customerName);
+      const isCabangUser = targetUser?.role === 'Cabang';
+      
+      return isCabangBranch || isCabangUser;
+    });
   }
 
   // Filter based on UI filters
