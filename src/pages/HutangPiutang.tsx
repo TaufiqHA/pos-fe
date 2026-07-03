@@ -15,6 +15,7 @@ export default function HutangPiutang() {
     visibleSales = sales.filter(s => s.branchId === user?.branchId);
     visiblePurchases = purchases.filter(p => p.branchId === user?.branchId);
   } else {
+    visibleSales = sales.filter(s => branches.some(b => b.name === s.customer));
     visiblePurchases = purchases.filter(p => (p.supplier || '').toLowerCase() !== 'kantor pusat' && !p.branchId);
   }
 
