@@ -4,13 +4,13 @@ import { formatRupiah, formatRibuan, unformatRibuan } from '../../lib/utils';
 import { Save, Plus, Trash2 } from 'lucide-react';
 import { CurrencyInput } from '../../components/CurrencyInput';
 
-const getCentralPriceForQty = (product: any, qty: number) => {
+const getCentralPriceForQty = (product: any, qty: number, baseCost: number) => {
   if (!product.isWholesale || !product.wholesalePrices || product.wholesalePrices.length === 0) {
-    return product.sellPrice;
+    return baseCost;
   }
   const sortedWP = [...product.wholesalePrices].sort((a: any, b: any) => b.qty - a.qty);
   const tier = sortedWP.find((wp: any) => qty >= wp.qty);
-  return tier ? tier.price : product.sellPrice;
+  return tier ? Math.min(tier.price, baseCost) : baseCost;
 };
 
 export default function HargaCabang() {
@@ -22,23 +22,41 @@ export default function HargaCabang() {
 
   if (!user || !user.branchId) return <div className="p-6 text-center text-slate-400">Data cabang tidak ditemukan.</div>;
 
+  const getLastPurchasePrice = (productId: string, fallbackPrice: number) => {
+    const branchPurchases = purchases
+      .filter(p => p.branchId === user?.branchId || (!p.branchId && p.userId === user?.id))
+      .filter(p => p.status === 'Selesai' || p.status === 'Lunas')
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    for (const purchase of branchPurchases) {
+      const item = purchase.items.find((i: any) => i.productId === productId);
+      if (item) {
+        return item.price;
+      }
+    }
+    return fallbackPrice;
+  };
+
   // Filter produk khusus untuk cabang: hanya tampilkan yang pernah dipesan
   let availableProducts = products;
   if (user?.role === 'Cabang') {
     const branchPurchaseProductIds = new Set<string>();
     purchases.forEach(purchase => {
       if (purchase.branchId === user.branchId || (!purchase.branchId && purchase.userId === user.id)) {
-        purchase.items.forEach(item => {
-          branchPurchaseProductIds.add(item.productId);
-        });
+        if (purchase.status === 'Selesai' || purchase.status === 'Lunas') {
+          purchase.items.forEach(item => {
+            branchPurchaseProductIds.add(item.productId);
+          });
+        }
       }
     });
     availableProducts = products.filter(p => branchPurchaseProductIds.has(p.id));
   }
 
   const handleEdit = (product: any) => {
+    const actualCost = getLastPurchasePrice(product.id, product.sellPrice);
     setEditingId(product.id);
-    setTempPrice(product.branchPrices?.[user.branchId as string] || product.sellPrice);
+    setTempPrice(product.branchPrices?.[user.branchId as string] || actualCost);
     setTempIsWholesale(product.branchIsWholesale?.[user.branchId as string] || product.isWholesale || false);
     
     const existingWP = product.branchWholesalePrices?.[user.branchId as string];
@@ -56,16 +74,21 @@ export default function HargaCabang() {
       const product = products.find(p => p.id === productId);
       if (!product) return;
 
-      if (tempPrice < product.sellPrice) {
-        alert('Harga dasar cabang tidak boleh di bawah harga pusat!');
+      const actualCost = getLastPurchasePrice(product.id, product.sellPrice);
+
+      if (tempPrice < actualCost) {
+        alert('Harga dasar cabang tidak boleh di bawah harga beli dari pusat!');
         return;
       }
 
       if (tempIsWholesale) {
         for (const wp of tempWholesalePrices) {
-          const centralMinPrice = getCentralPriceForQty(product, wp.qty);
-          if (wp.price < centralMinPrice) {
-            alert(`Harga grosir cabang untuk min. ${wp.qty} qty tidak boleh di bawah harga pusat (Rp ${centralMinPrice.toLocaleString('id-ID')})!`);
+          const centralMinPrice = getCentralPriceForQty(product, wp.qty, actualCost);
+          // Tetap tidak boleh jual rugi (di bawah modal aktual cabang)
+          const absoluteMinPrice = Math.max(centralMinPrice, actualCost);
+          
+          if (wp.price < absoluteMinPrice) {
+            alert(`Harga grosir cabang untuk min. ${wp.qty} qty tidak boleh di bawah batas minimum (Rp ${absoluteMinPrice.toLocaleString('id-ID')})!`);
             return;
           }
         }
@@ -124,17 +147,7 @@ export default function HargaCabang() {
                   <td className="p-4 font-mono text-slate-300 font-bold align-top">{product.sku}</td>
                   <td className="p-4 font-bold text-white max-w-[200px] truncate align-top">{product.name}</td>
                   <td className="p-4 text-right align-top">
-                    <div className="text-slate-400 font-mono">{formatRupiah(product.sellPrice)}</div>
-                    {product.isWholesale && product.wholesalePrices && product.wholesalePrices.length > 0 && (
-                      <div className="mt-2 flex flex-col items-end gap-1">
-                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter border-b border-[#1d2a57]">Grosir Pusat:</span>
-                        {product.wholesalePrices.map((wp: any, index: number) => (
-                          <div key={index} className="text-[10px] font-mono text-slate-400 font-semibold">
-                            {wp.qty}+ {product.unit} @ {formatRupiah(wp.price)}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <div className="text-slate-400 font-mono">{formatRupiah(getLastPurchasePrice(product.id, product.sellPrice))}</div>
                   </td>
                   <td className="p-4 text-right align-top min-w-[200px]">
                     {editingId === product.id ? (
