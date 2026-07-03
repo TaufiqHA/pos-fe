@@ -37,7 +37,9 @@ export default function PenjualanList() {
   }).length;
 
   let visibleSales = sales;
-  if (user?.role === 'Cabang') {
+  if (user?.role === 'Admin') {
+    visibleSales = sales.filter(s => branches.some(b => b.name === s.customer));
+  } else if (user?.role === 'Cabang') {
     visibleSales = sales.filter(s => s.branchId === user?.branchId);
   } else if (user?.role === 'Sales') {
     visibleSales = sales.filter(s => s.userId === user?.id);
@@ -124,7 +126,7 @@ export default function PenjualanList() {
           <div className="w-full sm:max-w-sm relative">
             <input
               type="text"
-              placeholder="Cari Invoice atau Outlet..."
+              placeholder={user?.role === 'Admin' ? "Cari Invoice atau Cabang..." : "Cari Invoice atau Outlet..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="bg-[#182352] text-white border border-[#1d2a57] rounded-xl px-4 py-2.5 w-full focus:outline-none focus:ring-1 focus:ring-[#b4f56b] placeholder-slate-500 text-sm font-semibold"
@@ -149,7 +151,9 @@ export default function PenjualanList() {
                 <th scope="col" className="px-6 py-4 text-left text-xs font-bold tracking-widest text-[#b4f56b] uppercase">No. Invoice</th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-bold tracking-widest text-[#b4f56b] uppercase">Tanggal</th>
                 {user?.role !== 'Outlet' && user?.role !== 'Cust' && (
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold tracking-widest text-[#b4f56b] uppercase">Outlet</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold tracking-widest text-[#b4f56b] uppercase">
+                    {user?.role === 'Admin' ? 'Cabang' : 'Outlet'}
+                  </th>
                 )}
                 <th scope="col" className="px-6 py-4 text-right text-xs font-bold tracking-widest text-[#b4f56b] uppercase">Total</th>
                 <th scope="col" className="px-6 py-4 text-center text-xs font-bold tracking-widest text-[#b4f56b] uppercase">Metode</th>

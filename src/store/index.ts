@@ -107,14 +107,16 @@ export const usePosStore = create<PosState>()(
         set({ user: null });
       },
 
-      fetchAllData: async () => {
+       fetchAllData: async () => {
         try {
+          const user = get().user;
+          const salesUrl = user?.role === 'Admin' ? '/sales?destination_type=cabang' : '/sales';
           const [
             resUsers, resProducts, resSales, resPurchases, resCategories, resUnits, resCustomers, resSuppliers, resDeliveries, resStockHistory, resBranches, resSettings, resWilayahs
           ] = await Promise.all([
             api.get('/users'),
             api.get('/products'),
-            api.get('/sales'),
+            api.get(salesUrl),
             api.get('/purchases'),
             api.get('/categories'),
             api.get('/units'),
