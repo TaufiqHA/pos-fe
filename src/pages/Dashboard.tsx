@@ -144,7 +144,10 @@ export default function Dashboard() {
   let visibleSales = sales;
   let visiblePurchases = purchases;
   
-  if ((user.role as string) === 'Cabang') {
+  if (user.role === 'Admin') {
+    visibleSales = sales.filter(s => branches.some(b => b.name === s.customer));
+    visiblePurchases = purchases;
+  } else if ((user.role as string) === 'Cabang') {
     visibleSales = sales.filter(s => s.branchId === user.branchId);
     visiblePurchases = purchases.filter(p => p.branchId === user.branchId);
   } else if (user.role === 'Sales') {

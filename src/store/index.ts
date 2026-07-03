@@ -110,7 +110,7 @@ export const usePosStore = create<PosState>()(
        fetchAllData: async () => {
         try {
           const user = get().user;
-          const salesUrl = user?.role === 'Admin' ? '/sales?destination_type=cabang' : '/sales';
+          const salesUrl = '/sales';
           const [
             resUsers, resProducts, resSales, resPurchases, resCategories, resUnits, resCustomers, resSuppliers, resDeliveries, resStockHistory, resBranches, resSettings, resWilayahs
           ] = await Promise.all([

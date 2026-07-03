@@ -5,15 +5,22 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 import { Download } from 'lucide-react';
 
 export default function Laporan() {
-  const { user, sales, products, openInvoiceModal } = usePosStore();
+  const { user, sales, products, openInvoiceModal, branches } = usePosStore();
   
   // Date filter
   const [filterPeriod, setFilterPeriod] = useState('7hari');
 
   const filteredSales = useMemo(() => {
     let baseSales = sales;
-    if (user?.role === 'Cabang') {
+    if (user?.role === 'Admin') {
+      baseSales = sales.filter(s => branches.some(b => b.name === s.customer));
+    } else if (user?.role === 'Cabang') {
       baseSales = sales.filter(s => s.branchId === user?.branchId);
+    } else if (user?.role === 'Sales') {
+      baseSales = sales.filter(s => s.userId === user?.id);
+    } else if (user?.role === 'Cust' || user?.role === 'Outlet') {
+      const targetCustomer = user?.outletName || user?.name;
+      baseSales = sales.filter(s => s.customer === targetCustomer);
     }
 
     const now = new Date();

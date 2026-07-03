@@ -5,7 +5,7 @@ import { formatDate, formatRupiah } from '../../lib/utils';
 import { Plus, Eye, Trash2 } from 'lucide-react';
 
 export default function PenjualanList() {
-  const { user, users, sales, purchases, branches, openInvoiceModal, deleteSale } = usePosStore();
+  const { user, users, sales, purchases, branches, openInvoiceModal, deleteSale, wilayahs } = usePosStore();
   const navigate = useNavigate();
 
   const canDelete = user?.role === 'Admin' || user?.role === 'Cabang';
@@ -67,13 +67,29 @@ export default function PenjualanList() {
   
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('Semua');
+  const [filterWilayah, setFilterWilayah] = useState('Semua Wilayah');
+  const [filterCabang, setFilterCabang] = useState('Semua Cabang');
 
   const filteredSales = visibleSales.filter(s => {
     const matchesSearch = s.invoice.toLowerCase().includes(search.toLowerCase()) || 
                           s.customer.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = filterStatus === 'Semua' || s.status === filterStatus;
+    const displayedStatus = (s.method === 'Tunai' || s.method === 'Transfer') && (s.status === 'Belum Bayar' || s.status === 'Diajukan' || !s.status) ? 'Selesai' : (s.status || 'Belum Bayar');
+    const matchesStatus = filterStatus === 'Semua' || displayedStatus === filterStatus;
+    
+    let matchesRegion = true;
+    let matchesBranch = true;
+    
+    if (user?.role === 'Admin') {
+      if (filterWilayah !== 'Semua Wilayah') {
+        const branchInfo = branches.find(b => b.name === s.customer);
+        matchesRegion = branchInfo ? branchInfo.wilayah === filterWilayah : false;
+      }
+      if (filterCabang !== 'Semua Cabang') {
+        matchesBranch = s.customer === filterCabang;
+      }
+    }
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesRegion && matchesBranch;
   });
 
   const getStatusClass = (status?: string) => {
@@ -122,8 +138,8 @@ export default function PenjualanList() {
       </div>
 
       <div className="bg-[#0e1531] border border-[#1d2a57] rounded-3xl overflow-hidden shadow-2xl">
-        <div className="p-5 border-b border-[#1d2a57]/40 flex flex-col sm:flex-row gap-4">
-          <div className="w-full sm:max-w-sm relative">
+        <div className="p-5 border-b border-[#1d2a57]/40 flex flex-col sm:flex-row flex-wrap gap-4 items-center">
+          <div className="w-full sm:flex-1 relative">
             <input
               type="text"
               placeholder={user?.role === 'Admin' ? "Cari Invoice atau Cabang..." : "Cari Invoice atau Outlet..."}
@@ -132,14 +148,39 @@ export default function PenjualanList() {
               className="bg-[#182352] text-white border border-[#1d2a57] rounded-xl px-4 py-2.5 w-full focus:outline-none focus:ring-1 focus:ring-[#b4f56b] placeholder-slate-500 text-sm font-semibold"
             />
           </div>
+          
+          {user?.role === 'Admin' && (
+            <>
+              <select 
+                value={filterWilayah}
+                onChange={(e) => {
+                  setFilterWilayah(e.target.value);
+                  setFilterCabang('Semua Cabang');
+                }}
+                className="bg-[#182352] text-white border border-[#1d2a57] rounded-xl px-4 py-2.5 w-full sm:w-48 focus:outline-none focus:ring-1 focus:ring-[#b4f56b] text-sm font-semibold cursor-pointer"
+              >
+                <option value="Semua Wilayah">Semua Wilayah</option>
+                {wilayahs.map(w => <option key={w} value={w}>{w}</option>)}
+              </select>
+              <select 
+                value={filterCabang}
+                onChange={(e) => setFilterCabang(e.target.value)}
+                disabled={filterWilayah === 'Semua Wilayah'}
+                className="bg-[#182352] text-white border border-[#1d2a57] rounded-xl px-4 py-2.5 w-full sm:w-48 focus:outline-none focus:ring-1 focus:ring-[#b4f56b] text-sm font-semibold cursor-pointer disabled:opacity-50"
+              >
+                <option value="Semua Cabang">Semua Cabang</option>
+                {branches.filter(b => b.wilayah === filterWilayah).map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+              </select>
+            </>
+          )}
+
           <select 
             value={filterStatus}
             onChange={e => setFilterStatus(e.target.value)}
             className="bg-[#182352] text-white border border-[#1d2a57] rounded-xl px-4 py-2.5 w-full sm:w-48 focus:outline-none focus:ring-1 focus:ring-[#b4f56b] text-sm font-semibold cursor-pointer"
           >
             <option value="Semua">Semua Status</option>
-            <option value="Lunas">Lunas</option>
-            <option value="Sebagian">Sebagian</option>
+            <option value="Selesai">Selesai</option>
             <option value="Belum Bayar">Belum Bayar</option>
           </select>
         </div>
