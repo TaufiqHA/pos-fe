@@ -56,7 +56,7 @@ export default function PenjualanList() {
         customer: p.supplier, // Supplier di sini adalah nama cabang
         grandTotal: p.total,
         method: p.method,
-        status: p.status === 'Belum Bayar' ? 'Diajukan' : (p.status || (p.method === 'Transfer' ? 'Selesai' : 'Belum Bayar')),
+        status: (p.method === 'Tunai' || p.method === 'Transfer') ? 'Selesai' : (p.status === 'Belum Bayar' ? 'Diajukan' : (p.status || 'Belum Bayar')),
       }));
       
     visibleSales = [...userSales, ...userPendingPOs] as any[];
@@ -188,8 +188,8 @@ export default function PenjualanList() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-white text-right font-mono">{formatRupiah(sale.grandTotal)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-slate-400">{sale.method}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(sale.status)}`}>
-                          {sale.status || (sale.method === 'Transfer' ? 'Selesai' : 'Belum Bayar')}
+                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass((sale.method === 'Tunai' || sale.method === 'Transfer') && (sale.status === 'Belum Bayar' || sale.status === 'Diajukan' || !sale.status) ? 'Selesai' : sale.status)}`}>
+                          {(sale.method === 'Tunai' || sale.method === 'Transfer') && (sale.status === 'Belum Bayar' || sale.status === 'Diajukan' || !sale.status) ? 'Selesai' : (sale.status || 'Belum Bayar')}
                        </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">

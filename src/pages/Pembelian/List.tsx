@@ -48,7 +48,9 @@ export default function PembelianList() {
   // Penyesuaian dinamis untuk data lama yang status utamanya tidak tersinkronisasi
   const enrichedPurchases = visiblePurchases.map(p => {
     let finalStatus = p.status;
-    if (p.status === 'Belum Bayar' || p.status === 'Lunas' || p.status === 'Sebagian') {
+    if ((p.method === 'Tunai' || p.method === 'Transfer') && (p.status === 'Belum Bayar' || p.status === 'Diajukan' || !p.status)) {
+      finalStatus = 'Selesai';
+    } else if (p.status === 'Belum Bayar' || p.status === 'Lunas' || p.status === 'Sebagian') {
       finalStatus = p.status;
     } else if (p.deliveryStatus === 'Selesai') {
       finalStatus = 'Selesai';

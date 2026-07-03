@@ -30,7 +30,7 @@ export default function PenjualanDetail() {
       discount: 0,
       grandTotal: purchase.total,
       method: purchase.method as any,
-      status: (purchase.status === 'Belum Bayar' ? 'Diajukan' : purchase.status) as any,
+      status: ((purchase.method === 'Tunai' || purchase.method === 'Transfer') && (purchase.status === 'Belum Bayar' || purchase.status === 'Diajukan' || !purchase.status) ? 'Selesai' : (purchase.status === 'Belum Bayar' ? 'Diajukan' : purchase.status)) as any,
       items: purchase.items as any[],
       notes: purchase.notes,
     } as any;
@@ -118,8 +118,8 @@ export default function PenjualanDetail() {
             <p className="text-slate-400 font-mono tracking-wider print:text-gray-600">{sale.invoice}</p>
           </div>
           <div className="text-right">
-             <span className={`px-4 py-1.5 inline-flex text-xs leading-5 font-bold uppercase tracking-widest rounded-full ${getStatusClass(sale.status)} border border-current/30`}>
-                {sale.status || (sale.method === 'Transfer' ? 'Selesai' : 'Belum Bayar')}
+             <span className={`px-4 py-1.5 inline-flex text-xs leading-5 font-bold uppercase tracking-widest rounded-full ${getStatusClass((sale.method === 'Tunai' || sale.method === 'Transfer') && (sale.status === 'Belum Bayar' || sale.status === 'Diajukan' || !sale.status) ? 'Selesai' : sale.status)} border border-current/30`}>
+                {(sale.method === 'Tunai' || sale.method === 'Transfer') && (sale.status === 'Belum Bayar' || sale.status === 'Diajukan' || !sale.status) ? 'Selesai' : (sale.status || 'Belum Bayar')}
              </span>
           </div>
         </div>

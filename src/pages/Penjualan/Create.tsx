@@ -219,10 +219,8 @@ export default function PenjualanCreate() {
     }
 
     let status: 'Lunas' | 'Belum Bayar' | 'Sebagian' | 'Selesai' = 'Belum Bayar';
-    if (method === 'Transfer') {
+    if (method === 'Transfer' || method === 'Tunai') {
       status = 'Selesai';
-    } else if (method === 'Tunai') {
-      status = 'Belum Bayar';
     } else if (method === 'Kredit') {
       status = 'Belum Bayar';
     }
@@ -235,7 +233,7 @@ export default function PenjualanCreate() {
           supplier: user?.branchId ? branches.find(b => b.id === user.branchId)?.name || 'Cabang' : 'Cabang',
           total: grandTotal,
           method,
-          status: 'Belum Bayar' as any,
+          status: status as any,
           items: cart,
           isProcessed: false,
           deliveryStatus: 'Menunggu',

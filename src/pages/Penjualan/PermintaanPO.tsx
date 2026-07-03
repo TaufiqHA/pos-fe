@@ -180,9 +180,9 @@ export default function PermintaanPO() {
     }
 
     let status: 'Lunas' | 'Belum Bayar' | 'Sebagian' | 'Selesai' = 'Belum Bayar';
-    if (method === 'Transfer') {
+    if (method === 'Transfer' || method === 'Tunai') {
       status = 'Selesai';
-    } else if (method === 'Tunai') {
+    } else if (method === 'Kredit') {
       status = 'Belum Bayar';
     }
 
